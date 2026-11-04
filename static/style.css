@@ -43,6 +43,17 @@ main {
 
 .field { margin-bottom: 14px; }
 .field label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
+
+.clear-link {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  padding: 0;
+  cursor: pointer;
+}
+.clear-link:hover { text-decoration: underline; }
 .field input[type="url"],
 .field input[type="file"],
 .field input[type="number"] {

@@ -1,5 +1,11 @@
 const form = document.getElementById("job-form");
 const jobsEl = document.getElementById("jobs");
+const urlInput = document.getElementById("url");
+
+document.getElementById("clear-url").addEventListener("click", () => {
+  urlInput.value = "";
+  urlInput.focus();
+});
 
 const STATUS_LABEL = {
   queued: "Queued",
@@ -146,7 +152,7 @@ async function loadDefaults() {
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const url = document.getElementById("url").value.trim();
+  const url = urlInput.value.trim();
   const fileInput = document.getElementById("file");
   const vertical = document.getElementById("vertical").checked;
   const maxClips = Number(maxClipsInput.value);
@@ -184,7 +190,7 @@ form.addEventListener("submit", async (e) => {
     renderJob(job);
     startPolling();
 
-    form.reset();
+    fileInput.value = "";
     document.getElementById("vertical").checked = true;
     await loadDefaults();
   } catch (err) {
