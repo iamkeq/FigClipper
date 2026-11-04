@@ -3,13 +3,17 @@ const jobsEl = document.getElementById("jobs");
 
 const STATUS_LABEL = {
   queued: "Queued",
-  downloading: "Downloading",
+  downloading: "Downloading video",
   uploading: "Uploading",
-  analyzing: "Analyzing with Gemini",
+  analyzing: "Analyzing with Gemini (can take a minute or two)",
   clipping: "Cutting clips",
   done: "Done",
   error: "Error",
 };
+
+const ACTIVE_STATUSES = new Set(["queued", "downloading", "uploading", "analyzing", "clipping"]);
+let currentJobId = null;
+let pollTimer = null;
 
 function clipCard(jobId, clip) {
   return `
@@ -37,6 +41,7 @@ function escapeHtml(str) {
 }
 
 function jobCard(job) {
+  const isActive = ACTIVE_STATUSES.has(job.status);
   const badgeClass = job.status === "done" ? "done" : job.status === "error" ? "error" : "";
   const label = STATUS_LABEL[job.status] || job.status;
   const clips = (job.clips || []).map((c) => clipCard(job.id, c)).join("");
@@ -46,6 +51,10 @@ function jobCard(job) {
     (job.clips || []).length > 1
       ? `<a class="download-all-btn" href="/api/jobs/${job.id}/clips.zip" download>Download all (${job.clips.length})</a>`
       : "";
+
+  const statusLine = isActive
+    ? `<div class="status-line"><span class="spinner"></span>${escapeHtml(label)}&hellip;</div>`
+    : "";
 
   return `
     <div class="job-card" data-job-id="${job.id}">
@@ -59,23 +68,62 @@ function jobCard(job) {
           <button class="delete-btn" data-delete="${job.id}">Delete</button>
         </div>
       </div>
+      ${statusLine}
       ${error}
       ${clips ? `<div class="clip-grid">${clips}</div>` : ""}
     </div>
   `;
 }
 
-async function refreshJobs() {
+function renderJob(job) {
+  jobsEl.innerHTML = job ? jobCard(job) : "";
+}
+
+async function pollCurrentJob() {
+  if (!currentJobId) return;
+  try {
+    const res = await fetch(`/api/jobs/${currentJobId}`);
+    if (!res.ok) {
+      currentJobId = null;
+      renderJob(null);
+      return;
+    }
+    const job = await res.json();
+    renderJob(job);
+    if (!ACTIVE_STATUSES.has(job.status) && pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  } catch {
+    // transient fetch failure, retry on next tick
+  }
+}
+
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollCurrentJob, 2000);
+}
+
+async function loadMostRecentJob() {
   const res = await fetch("/api/jobs");
   const jobs = await res.json();
-  jobsEl.innerHTML = jobs.map(jobCard).join("");
+  if (jobs.length) {
+    currentJobId = jobs[0].id;
+    renderJob(jobs[0]);
+    if (ACTIVE_STATUSES.has(jobs[0].status)) startPolling();
+  }
 }
 
 jobsEl.addEventListener("click", async (e) => {
   const btn = e.target.closest("[data-delete]");
   if (!btn) return;
   await fetch(`/api/jobs/${btn.dataset.delete}`, { method: "DELETE" });
-  refreshJobs();
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  currentJobId = null;
+  renderJob(null);
 });
 
 const maxClipsInput = document.getElementById("max-clips");
@@ -130,10 +178,15 @@ form.addEventListener("submit", async (e) => {
       const detail = await res.json().catch(() => ({}));
       throw new Error(detail.detail || "Failed to create job");
     }
+    const job = await res.json();
+
+    currentJobId = job.id;
+    renderJob(job);
+    startPolling();
+
     form.reset();
     document.getElementById("vertical").checked = true;
     await loadDefaults();
-    await refreshJobs();
   } catch (err) {
     alert(err.message);
   } finally {
@@ -142,5 +195,4 @@ form.addEventListener("submit", async (e) => {
 });
 
 loadDefaults();
-refreshJobs();
-setInterval(refreshJobs, 2500);
+loadMostRecentJob();

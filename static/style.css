@@ -98,6 +98,29 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .status-badge.done { background: #1e4620; color: #7ee08a; }
 .status-badge.error { background: #4a1f1f; color: #ff8a8a; }
 
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 4px 0 12px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .clip-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
