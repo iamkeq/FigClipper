@@ -1,0 +1,14 @@
+services:
+  figclipper:
+    build: .
+    image: figclipper:latest
+    container_name: figclipper
+    restart: unless-stopped
+    ports:
+      - "8420:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - MAX_CLIPS=${MAX_CLIPS:-5}
+    volumes:
+      - ./data:/app/data

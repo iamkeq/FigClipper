@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FigClipper</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+  <h1>FigClipper</h1>
+  <p>Drop in a video or a YouTube link, let Gemini find the best moments, export clips.</p>
+</header>
+
+<main>
+  <form id="job-form">
+    <div class="field">
+      <label for="url">YouTube / video URL</label>
+      <input type="url" id="url" name="url" placeholder="https://youtube.com/watch?v=..." />
+    </div>
+    <div class="divider">or</div>
+    <div class="field">
+      <label for="file">Upload a video file</label>
+      <input type="file" id="file" name="file" accept="video/*" />
+    </div>
+    <div class="field checkbox">
+      <input type="checkbox" id="vertical" name="vertical" checked />
+      <label for="vertical">Crop clips to vertical 9:16</label>
+    </div>
+    <button type="submit">Generate clips</button>
+  </form>
+
+  <section id="jobs"></section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
