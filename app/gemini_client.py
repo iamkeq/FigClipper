@@ -4,8 +4,12 @@ from pathlib import Path
 
 from google import genai
 from google.genai import types
+from google.genai.errors import ServerError
 
 from app.config import GEMINI_API_KEY, GEMINI_MODEL
+
+_MAX_RETRIES = 4
+_RETRY_BACKOFF_S = 10
 
 PROMPT_TEMPLATE = """You are selecting the best short-form clips from this video for \
 posting as standalone social media shorts (like TikTok/YouTube Shorts/Reels).
@@ -35,6 +39,20 @@ def _wait_until_active(client: genai.Client, file_name: str, timeout_s: int = 60
     raise TimeoutError("Timed out waiting for Gemini to process the video")
 
 
+def _generate_with_retry(client: genai.Client, prompt: str, uploaded):
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            return client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=[uploaded, prompt],
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+        except ServerError:
+            if attempt == _MAX_RETRIES:
+                raise
+            time.sleep(_RETRY_BACKOFF_S * attempt)
+
+
 def analyze_video(
     video_path: Path, max_clips: int, min_length_s: float, max_length_s: float
 ) -> list[dict]:
@@ -50,11 +68,7 @@ def analyze_video(
         max_clips=max_clips, min_length=min_length_s, max_length=max_length_s
     )
     try:
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[uploaded, prompt],
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
-        )
+        response = _generate_with_retry(client, prompt, uploaded)
     finally:
         client.files.delete(name=uploaded.name)
 
