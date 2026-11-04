@@ -1,9 +1,11 @@
+import io
 import shutil
+import zipfile
 from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import (
@@ -105,6 +107,26 @@ def get_clip(job_id: str, filename: str):
     if not path.is_file():
         raise HTTPException(404, "Clip not found")
     return FileResponse(path, media_type="video/mp4", filename=safe_name)
+
+
+@app.get("/api/jobs/{job_id}/clips.zip")
+def get_all_clips(job_id: str):
+    job = store.get(job_id)
+    if job is None:
+        raise HTTPException(404, "Job not found")
+    if not job.clips:
+        raise HTTPException(404, "No clips available for this job")
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_STORED) as zf:
+        for clip in job.clips:
+            path = CLIPS_DIR / job_id / clip.filename
+            if path.is_file():
+                zf.write(path, arcname=clip.filename)
+    buffer.seek(0)
+
+    headers = {"Content-Disposition": f'attachment; filename="{job_id}-clips.zip"'}
+    return StreamingResponse(buffer, media_type="application/zip", headers=headers)
 
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

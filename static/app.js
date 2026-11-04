@@ -42,6 +42,11 @@ function jobCard(job) {
   const clips = (job.clips || []).map((c) => clipCard(job.id, c)).join("");
   const error = job.error ? `<p class="job-error">${escapeHtml(job.error)}</p>` : "";
 
+  const downloadAll =
+    (job.clips || []).length > 1
+      ? `<a class="download-all-btn" href="/api/jobs/${job.id}/clips.zip" download>Download all (${job.clips.length})</a>`
+      : "";
+
   return `
     <div class="job-card" data-job-id="${job.id}">
       <div class="job-header">
@@ -50,6 +55,7 @@ function jobCard(job) {
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <span class="status-badge ${badgeClass}">${label}</span>
+          ${downloadAll}
           <button class="delete-btn" data-delete="${job.id}">Delete</button>
         </div>
       </div>
