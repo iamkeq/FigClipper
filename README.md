@@ -53,8 +53,8 @@ Set these via `.env` (local) or environment variables (Docker):
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model used for clip analysis. |
 | `MAX_CLIPS` | `5` | Default number of clips to generate per video (editable per job in the UI). |
 | `HARD_MAX_CLIPS` | `20` | Upper bound the UI/API will allow for clip count. |
-| `MIN_CLIP_LENGTH_S` | `15` | Default minimum clip length in seconds (editable per job). |
-| `MAX_CLIP_LENGTH_S` | `90` | Default maximum clip length in seconds (editable per job). |
+| `MIN_CLIP_LENGTH_S` | `20` | Default minimum clip length in seconds (editable per job). |
+| `MAX_CLIP_LENGTH_S` | `30` | Default maximum clip length in seconds (editable per job). |
 | `DATA_DIR` | `data` | Where uploads/downloads/clips/job state are stored. |
 
 Clip count and min/max length can also be overridden per job from the web UI.
