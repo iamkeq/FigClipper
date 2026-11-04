@@ -110,3 +110,6 @@ def _run(job_id: str, video_path: Optional[Path], url: Optional[str]) -> None:
     except Exception as exc:  # noqa: BLE001
         job.error = str(exc)
         _set_status(job, "error")
+    finally:
+        if video_path is not None and video_path.exists():
+            video_path.unlink()

@@ -37,6 +37,13 @@ docker compose up -d --build
 This builds an image with `ffmpeg` baked in, runs the API/UI on port `8420`, and
 persists uploads/downloads/clips under `./data` (bind-mounted into the container).
 
+The Docker image also bundles a PO token provider
+([bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-pot-provider))
+so YouTube downloads can reach full quality (up to the 1080p cap below) instead of
+being capped at ~360p, which is all YouTube allows without one. Running outside
+Docker (`uvicorn` directly) falls back to the capped quality automatically if that
+provider isn't set up.
+
 To update after pulling new code:
 
 ```bash
@@ -50,7 +57,7 @@ Set these via `.env` (local) or environment variables (Docker):
 | Variable | Default | Description |
 |---|---|---|
 | `GEMINI_API_KEY` | — | Required. Your Gemini API key. |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model used for clip analysis. |
+| `GEMINI_MODEL` | `gemini-3.5-flash` | Gemini model used for clip analysis. |
 | `MAX_CLIPS` | `5` | Default number of clips to generate per video (editable per job in the UI). |
 | `HARD_MAX_CLIPS` | `20` | Upper bound the UI/API will allow for clip count. |
 | `MIN_CLIP_LENGTH_S` | `20` | Default minimum clip length in seconds (editable per job). |
@@ -69,3 +76,6 @@ Clip count and min/max length can also be overridden per job from the web UI.
   an editor.
 - There's no auth — if you expose this beyond your LAN, put it behind a reverse proxy
   with its own access control.
+- The downloaded/uploaded source video is deleted once a job finishes (whether it
+  succeeds or fails) so `data/downloads` and `data/uploads` don't accumulate; only the
+  generated clips are kept.

@@ -8,7 +8,10 @@ services:
       - "8420:8000"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash}
       - MAX_CLIPS=${MAX_CLIPS:-5}
+      - HARD_MAX_CLIPS=${HARD_MAX_CLIPS:-20}
+      - MIN_CLIP_LENGTH_S=${MIN_CLIP_LENGTH_S:-20}
+      - MAX_CLIP_LENGTH_S=${MAX_CLIP_LENGTH_S:-30}
     volumes:
       - ./data:/app/data
