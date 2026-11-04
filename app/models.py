@@ -18,6 +18,9 @@ class Job(BaseModel):
     source_type: str  # "upload" | "url"
     source: str  # original filename or URL
     vertical: bool
+    max_clips: int
+    min_length_s: float
+    max_length_s: float
     created_at: float
     error: Optional[str] = None
     clips: list[Clip] = []

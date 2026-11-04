@@ -1,3 +1,4 @@
+import re
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -5,7 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 from app.clipper import cut_clip, get_duration
-from app.config import CLIPS_DIR, MAX_CLIPS
+from app.config import CLIPS_DIR
 from app.downloader import download_youtube
 from app.gemini_client import analyze_video
 from app.jobs import store
@@ -14,13 +15,29 @@ from app.models import Clip, Job
 _executor = ThreadPoolExecutor(max_workers=2)
 
 
-def new_job(source_type: str, source: str, vertical: bool) -> Job:
+def _slugify(text: str, fallback: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    slug = slug[:60].strip("-")
+    return slug or fallback
+
+
+def new_job(
+    source_type: str,
+    source: str,
+    vertical: bool,
+    max_clips: int,
+    min_length_s: float,
+    max_length_s: float,
+) -> Job:
     job = Job(
         id=uuid.uuid4().hex[:12],
         status="queued",
         source_type=source_type,
         source=source,
         vertical=vertical,
+        max_clips=max_clips,
+        min_length_s=min_length_s,
+        max_length_s=max_length_s,
         created_at=time.time(),
     )
     store.put(job)
@@ -50,24 +67,37 @@ def _run(job_id: str, video_path: Optional[Path], url: Optional[str]) -> None:
         duration = get_duration(video_path)
 
         _set_status(job, "analyzing")
-        raw_clips = analyze_video(video_path, MAX_CLIPS)
+        raw_clips = analyze_video(
+            video_path, job.max_clips, job.min_length_s, job.max_length_s
+        )
 
         _set_status(job, "clipping")
         job_clip_dir = CLIPS_DIR / job_id
         job_clip_dir.mkdir(parents=True, exist_ok=True)
 
         clips: list[Clip] = []
+        used_names: set[str] = set()
         for i, c in enumerate(raw_clips):
             start_s = max(0.0, float(c["start_s"]))
             end_s = min(duration, float(c["end_s"]))
             if end_s <= start_s:
                 continue
-            filename = f"clip_{i + 1}.mp4"
+
+            title = str(c.get("title", f"Clip {i + 1}"))
+            slug = _slugify(str(c.get("slug") or title), f"clip-{i + 1}")
+            base_name = f"{i + 1:02d}-{slug}"
+            filename = f"{base_name}.mp4"
+            suffix = 2
+            while filename in used_names:
+                filename = f"{base_name}-{suffix}.mp4"
+                suffix += 1
+            used_names.add(filename)
+
             cut_clip(video_path, start_s, end_s, job_clip_dir / filename, job.vertical)
             clips.append(
                 Clip(
                     index=i + 1,
-                    title=str(c.get("title", f"Clip {i + 1}")),
+                    title=title,
                     reason=str(c.get("reason", "")),
                     start_s=start_s,
                     end_s=end_s,

@@ -38,10 +38,14 @@ main {
   padding: 20px;
 }
 
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; }
+
 .field { margin-bottom: 14px; }
 .field label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
 .field input[type="url"],
-.field input[type="file"] {
+.field input[type="file"],
+.field input[type="number"] {
   width: 100%;
   padding: 10px;
   background: #0d0f14;
@@ -105,6 +109,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .clip-card h4 { margin: 8px 0 2px; font-size: 14px; }
 .clip-card p { margin: 0; color: var(--muted); font-size: 12px; }
 .clip-card a { color: var(--accent); font-size: 12px; }
+.clip-filename { font-family: ui-monospace, monospace; word-break: break-all; opacity: 0.7; }
 
 .job-error { color: #ff8a8a; font-size: 13px; }
 

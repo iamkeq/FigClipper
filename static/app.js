@@ -18,6 +18,7 @@ function clipCard(jobId, clip) {
       <h4>${escapeHtml(clip.title)}</h4>
       <p>${formatTime(clip.start_s)} - ${formatTime(clip.end_s)}</p>
       <p>${escapeHtml(clip.reason)}</p>
+      <p class="clip-filename">${escapeHtml(clip.filename)}</p>
       <a href="/api/jobs/${jobId}/clips/${clip.filename}" download>Download</a>
     </div>
   `;
@@ -71,14 +72,39 @@ jobsEl.addEventListener("click", async (e) => {
   refreshJobs();
 });
 
+const maxClipsInput = document.getElementById("max-clips");
+const minLengthInput = document.getElementById("min-length");
+const maxLengthInput = document.getElementById("max-length");
+let defaults = { max_clips: 5, hard_max_clips: 20, min_length_s: 15, max_length_s: 90 };
+
+async function loadDefaults() {
+  try {
+    const res = await fetch("/api/defaults");
+    defaults = await res.json();
+  } catch {
+    // keep built-in fallback defaults
+  }
+  maxClipsInput.value = defaults.max_clips;
+  maxClipsInput.max = defaults.hard_max_clips;
+  minLengthInput.value = defaults.min_length_s;
+  maxLengthInput.value = defaults.max_length_s;
+}
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = document.getElementById("url").value.trim();
   const fileInput = document.getElementById("file");
   const vertical = document.getElementById("vertical").checked;
+  const maxClips = Number(maxClipsInput.value);
+  const minLength = Number(minLengthInput.value);
+  const maxLength = Number(maxLengthInput.value);
 
   if (!url && !fileInput.files.length) {
     alert("Provide a URL or choose a file");
+    return;
+  }
+  if (minLength > maxLength) {
+    alert("Min length cannot be greater than max length");
     return;
   }
 
@@ -86,6 +112,9 @@ form.addEventListener("submit", async (e) => {
   if (url) fd.append("url", url);
   if (fileInput.files.length) fd.append("file", fileInput.files[0]);
   fd.append("vertical", vertical ? "true" : "false");
+  fd.append("max_clips", String(maxClips));
+  fd.append("min_length_s", String(minLength));
+  fd.append("max_length_s", String(maxLength));
 
   const submitBtn = form.querySelector("button[type=submit]");
   submitBtn.disabled = true;
@@ -97,6 +126,7 @@ form.addEventListener("submit", async (e) => {
     }
     form.reset();
     document.getElementById("vertical").checked = true;
+    await loadDefaults();
     await refreshJobs();
   } catch (err) {
     alert(err.message);
@@ -105,5 +135,6 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
+loadDefaults();
 refreshJobs();
 setInterval(refreshJobs, 2500);

@@ -51,13 +51,21 @@ Set these via `.env` (local) or environment variables (Docker):
 |---|---|---|
 | `GEMINI_API_KEY` | — | Required. Your Gemini API key. |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model used for clip analysis. |
-| `MAX_CLIPS` | `5` | Max number of clips to generate per video. |
+| `MAX_CLIPS` | `5` | Default number of clips to generate per video (editable per job in the UI). |
+| `HARD_MAX_CLIPS` | `20` | Upper bound the UI/API will allow for clip count. |
+| `MIN_CLIP_LENGTH_S` | `15` | Default minimum clip length in seconds (editable per job). |
+| `MAX_CLIP_LENGTH_S` | `90` | Default maximum clip length in seconds (editable per job). |
 | `DATA_DIR` | `data` | Where uploads/downloads/clips/job state are stored. |
+
+Clip count and min/max length can also be overridden per job from the web UI.
 
 ## Notes
 
 - Clip cutting re-encodes (rather than stream-copies) so cut points are frame-accurate.
 - Jobs and their clip metadata persist to `data/jobs.json`; clip files live under
   `data/clips/<job_id>/`.
+- Clip filenames are generated from what Gemini says happens in the clip (e.g.
+  `01-dog-steals-sandwich.mp4`), so they're already meaningful once you pull them into
+  an editor.
 - There's no auth — if you expose this beyond your LAN, put it behind a reverse proxy
   with its own access control.

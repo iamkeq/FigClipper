@@ -8,6 +8,9 @@ load_dotenv()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 MAX_CLIPS = int(os.environ.get("MAX_CLIPS", "5"))
+MIN_CLIP_LENGTH_S = float(os.environ.get("MIN_CLIP_LENGTH_S", "15"))
+MAX_CLIP_LENGTH_S = float(os.environ.get("MAX_CLIP_LENGTH_S", "90"))
+HARD_MAX_CLIPS = int(os.environ.get("HARD_MAX_CLIPS", "20"))
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", "data")).resolve()
 UPLOADS_DIR = DATA_DIR / "uploads"

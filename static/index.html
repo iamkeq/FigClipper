@@ -23,6 +23,20 @@
       <label for="file">Upload a video file</label>
       <input type="file" id="file" name="file" accept="video/*" />
     </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="max-clips">Number of clips</label>
+        <input type="number" id="max-clips" name="max_clips" min="1" max="20" step="1" />
+      </div>
+      <div class="field">
+        <label for="min-length">Min length (seconds)</label>
+        <input type="number" id="min-length" name="min_length_s" min="1" step="1" />
+      </div>
+      <div class="field">
+        <label for="max-length">Max length (seconds)</label>
+        <input type="number" id="max-length" name="max_length_s" min="1" step="1" />
+      </div>
+    </div>
     <div class="field checkbox">
       <input type="checkbox" id="vertical" name="vertical" checked />
       <label for="vertical">Crop clips to vertical 9:16</label>
